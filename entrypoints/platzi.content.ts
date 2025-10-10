@@ -3,44 +3,56 @@ export default defineContentScript({
   main() {
     console.log("Platzi copy extension loaded");
 
-    // Add double-click event listener to the document
+    // Helper function to copy and provide visual feedback
+    function copyToClipboard(element: HTMLElement) {
+      const textToCopy = element.innerText || element.textContent;
+
+      if (textToCopy) {
+        navigator.clipboard
+          .writeText(textToCopy.trim())
+          .then(() => {
+            console.log("Content copied to clipboard:", textToCopy.trim());
+
+            // Visual feedback - briefly highlight the element
+            const originalBackground = element.style.backgroundColor;
+            element.style.backgroundColor = "#4CAF50";
+            element.style.transition = "background-color 0.3s";
+
+            setTimeout(() => {
+              element.style.backgroundColor = originalBackground;
+            }, 300);
+          })
+          .catch((err) => {
+            console.error("Failed to copy to clipboard:", err);
+          });
+      }
+    }
+
+    // Double-click event listener for content class
     document.addEventListener("dblclick", (event) => {
       const target = event.target as HTMLElement;
 
-      // Check if the clicked element or its parent has the specific class
+      // Check if the clicked element or its parent has a class containing "Articlass__content"
+      // This is more resilient to CSS Module hash changes
       const contentElement = target.closest(
-        ".Resources_Resources__Articlass__content__BsvgC"
+        '[class*="Articlass__content"]'
       ) as HTMLElement;
+
+      if (contentElement) {
+        copyToClipboard(contentElement);
+      }
+    });
+
+    // Single click event listener for h1 elements
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "h") return;
+      const target = event.target as HTMLElement;
 
       // Check if the clicked element is an h1 or inside an h1
       const h1Element = target.closest("h1") as HTMLElement;
 
-      const elementToCopy = contentElement || h1Element;
-
-      if (elementToCopy) {
-        // Get the text content
-        const textToCopy = elementToCopy.innerText || elementToCopy.textContent;
-
-        if (textToCopy) {
-          // Copy to clipboard using the Clipboard API
-          navigator.clipboard
-            .writeText(textToCopy.trim())
-            .then(() => {
-              console.log("Content copied to clipboard:", textToCopy.trim());
-
-              // Optional: Visual feedback - briefly highlight the element
-              const originalBackground = elementToCopy.style.backgroundColor;
-              elementToCopy.style.backgroundColor = "#4CAF50";
-              elementToCopy.style.transition = "background-color 0.3s";
-
-              setTimeout(() => {
-                elementToCopy.style.backgroundColor = originalBackground;
-              }, 300);
-            })
-            .catch((err) => {
-              console.error("Failed to copy to clipboard:", err);
-            });
-        }
+      if (h1Element) {
+        copyToClipboard(h1Element);
       }
     });
   },
