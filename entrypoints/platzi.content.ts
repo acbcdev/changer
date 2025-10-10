@@ -43,15 +43,26 @@ export default defineContentScript({
       }
     });
 
-    // Single click event listener for h1 elements
+    // Keyboard shortcut: Press 'h' to copy the first h1 element
     document.addEventListener("keydown", (event) => {
-      if (event.key !== "h") return;
-      const target = event.target as HTMLElement;
+      // Only trigger on 'h' key
+      if (event.key !== "h" && event.key !== "H") return;
 
-      // Check if the clicked element is an h1 or inside an h1
-      const h1Element = target.closest("h1") as HTMLElement;
+      // Check if user is typing in an input field
+      const activeElement = document.activeElement;
+      const isTyping =
+        activeElement?.tagName === "INPUT" ||
+        activeElement?.tagName === "TEXTAREA" ||
+        activeElement?.getAttribute("contenteditable") === "true";
+
+      // Don't trigger if user is typing
+      if (isTyping) return;
+
+      // Find the first h1 element on the page
+      const h1Element = document.querySelector("h1") as HTMLElement;
 
       if (h1Element) {
+        event.preventDefault();
         copyToClipboard(h1Element);
       }
     });
