@@ -39,11 +39,8 @@ export default defineContentScript({
       }
     });
 
-    // Keyboard shortcut: Press 'h' to copy the first h1 element
+    // Keyboard shortcuts
     document.addEventListener("keydown", (event) => {
-      // Only trigger on 'h' key
-      if (event.key !== "h" && event.key !== "H") return;
-
       // Check if user is typing in an input field
       const activeElement = document.activeElement;
       const isTyping =
@@ -54,12 +51,26 @@ export default defineContentScript({
       // Don't trigger if user is typing
       if (isTyping) return;
 
-      // Find the first h1 element on the page
-      const h1Element = document.querySelector("h1") as HTMLElement;
+      // Keyboard shortcut: Press 'h' to copy the first h1 element
+      if (event.key === "h" || event.key === "H") {
+        const h1Element = document.querySelector("h1") as HTMLElement;
 
-      if (h1Element) {
-        event.preventDefault();
-        copyToClipboard(h1Element);
+        if (h1Element) {
+          event.preventDefault();
+          copyToClipboard(h1Element);
+        }
+      }
+
+      // Keyboard shortcut: Press 'r' to copy the resume content
+      if (event.key === "r" || event.key === "R") {
+        const contentElement = document.querySelector(
+          '[class*="Articlass__content"]'
+        ) as HTMLElement;
+        console.log(contentElement);
+        if (contentElement) {
+          event.preventDefault();
+          copyToClipboard(contentElement);
+        }
       }
     });
   },
