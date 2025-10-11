@@ -41,6 +41,8 @@ export default defineContentScript({
 
 ## Development Commands
 
+**IMPORTANT**: Do not run `pnpm build` or `pnpm dev` commands automatically. Only run these when explicitly requested by the user.
+
 ```bash
 # Development (Chrome, with hot reload)
 pnpm dev

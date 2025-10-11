@@ -1,8 +1,6 @@
 export default defineContentScript({
   matches: ["*://mail.google.com/*"],
   main() {
-    console.log("Gmail keyboard shortcuts extension loaded");
-
     // Add keyboard shortcuts
     document.addEventListener("keydown", (event) => {
       // Check if user is not typing in an input field
@@ -18,23 +16,27 @@ export default defineContentScript({
       // Handle left/right arrow keys for previous/next email
       if (event.key === "ArrowLeft" || event.key === "<") {
         event.preventDefault();
-        // Find and click the "newer" button (previous email)
+        // Find the "newer" button (supports English and Spanish)
         const newerButton = document.querySelector(
-          '[data-tooltip="Newer"]'
+          '[aria-label="Newer"], [aria-label="Más reciente"]'
         ) as HTMLElement;
-        if (newerButton) {
+        if (
+          newerButton &&
+          newerButton.getAttribute("aria-disabled") !== "true"
+        ) {
           newerButton.click();
-          console.log("Navigated to newer email");
         }
       } else if (event.key === "ArrowRight" || event.key === ">") {
         event.preventDefault();
-        // Find and click the "older" button (next email)
+        // Find the "older" button (supports English and Spanish)
         const olderButton = document.querySelector(
-          '[data-tooltip="Older"]'
+          '[aria-label="Older"], [aria-label="Anterior"]'
         ) as HTMLElement;
-        if (olderButton) {
+        if (
+          olderButton &&
+          olderButton.getAttribute("aria-disabled") !== "true"
+        ) {
           olderButton.click();
-          console.log("Navigated to older email");
         }
       }
 
@@ -66,6 +68,12 @@ export default defineContentScript({
         event.preventDefault();
         openAccountSwitcher();
       }
+
+      // Press 'h' to go to inbox
+      if (event.key === "h" || event.key === "H") {
+        event.preventDefault();
+        goToInbox();
+      }
     });
 
     // Function to open the account switcher menu
@@ -77,7 +85,6 @@ export default defineContentScript({
 
       if (profileButton) {
         profileButton.click();
-        console.log("Opened account switcher");
       } else {
         // Try alternative selectors
         const altButton = document
@@ -88,7 +95,6 @@ export default defineContentScript({
 
         if (altButton) {
           altButton.click();
-          console.log("Opened account switcher (alternative)");
         }
       }
     }
@@ -97,20 +103,28 @@ export default defineContentScript({
     function switchToAccount(index: number) {
       const currentUrl = window.location.href;
 
-      // Check if we're already in a /mail/u/{number}/ format
-      const accountUrlPattern = /\/mail\/u\/\d+\//;
+      // Extract current account number if exists
+      const accountMatch = currentUrl.match(/\/mail\/u\/(\d+)\//);
+      const currentAccount = accountMatch ? accountMatch[1] : "0";
 
-      let newUrl: string;
-      if (accountUrlPattern.test(currentUrl)) {
-        // Replace the existing account number with the new one
-        newUrl = currentUrl.replace(/\/mail\/u\/\d+\//, `/mail/u/${index}/`);
-      } else {
-        // Add the account number to the URL
-        newUrl = currentUrl.replace(/\/mail\//, `/mail/u/${index}/`);
-      }
+      // Build new URL - always go to inbox when switching accounts
+      const newUrl = `https://mail.google.com/mail/u/${index}/#inbox`;
 
-      console.log(`Switching to account ${index + 1} via URL: ${newUrl}`);
       window.location.href = newUrl;
+    }
+
+    // Function to go to inbox
+    function goToInbox() {
+      const currentUrl = window.location.href;
+
+      // Extract current account number if exists
+      const accountMatch = currentUrl.match(/\/mail\/u\/(\d+)\//);
+      const currentAccount = accountMatch ? accountMatch[1] : "0";
+
+      // Go to inbox for current account
+      const inboxUrl = `https://mail.google.com/mail/u/${currentAccount}/#inbox`;
+
+      window.location.href = inboxUrl;
     }
   },
 });

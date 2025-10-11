@@ -1,8 +1,6 @@
 export default defineContentScript({
   matches: ["*://*.platzi.com/*"],
   main() {
-    console.log("Platzi copy extension loaded");
-
     // Helper function to copy and provide visual feedback
     function copyToClipboard(element: HTMLElement) {
       const textToCopy = element.innerText || element.textContent;
@@ -11,8 +9,6 @@ export default defineContentScript({
         navigator.clipboard
           .writeText(textToCopy.trim())
           .then(() => {
-            console.log("Content copied to clipboard:", textToCopy.trim());
-
             // Visual feedback - briefly highlight the element
             const originalBackground = element.style.backgroundColor;
             element.style.backgroundColor = "#4CAF50";
