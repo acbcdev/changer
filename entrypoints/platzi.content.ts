@@ -1,6 +1,9 @@
 export default defineContentScript({
   matches: ["*://*.platzi.com/*"],
   main() {
+    // Track currently selected quiz option index
+    let selectedOptionIndex = -1;
+
     // Helper function to copy and provide visual feedback
     function copyToClipboard(element: HTMLElement) {
       const textToCopy = element.innerText || element.textContent;
@@ -21,6 +24,27 @@ export default defineContentScript({
           .catch((err) => {
             console.error("Failed to copy to clipboard:", err);
           });
+      }
+    }
+
+    // Helper function to highlight selected quiz option
+    function highlightOption(index: number) {
+      const optionButtons = document.querySelectorAll(
+        'button[data-testid="QuestionOption-content"]'
+      ) as NodeListOf<HTMLButtonElement>;
+
+      // Remove previous highlights
+      optionButtons.forEach((btn) => {
+        btn.style.outline = "";
+        btn.style.outlineOffset = "";
+      });
+
+      // Highlight the selected option
+      if (index >= 0 && index < optionButtons.length) {
+        const selectedButton = optionButtons[index];
+        selectedButton.style.outline = "3px solid #4CAF50";
+        selectedButton.style.outlineOffset = "2px";
+        selectedButton.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
     }
 
@@ -70,6 +94,92 @@ export default defineContentScript({
         if (contentElement) {
           event.preventDefault();
           copyToClipboard(contentElement);
+        }
+      }
+
+      // Arrow key navigation for quiz options
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        const optionButtons = document.querySelectorAll(
+          'button[data-testid="QuestionOption-content"]'
+        ) as NodeListOf<HTMLButtonElement>;
+
+        if (optionButtons.length === 0) return;
+
+        event.preventDefault();
+
+        if (event.key === "ArrowDown") {
+          // If nothing selected, select first; otherwise move down
+          if (selectedOptionIndex === -1) {
+            selectedOptionIndex = 0;
+          } else {
+            selectedOptionIndex = (selectedOptionIndex + 1) % optionButtons.length;
+          }
+        } else if (event.key === "ArrowUp") {
+          // If nothing selected, select last; otherwise move up
+          if (selectedOptionIndex === -1) {
+            selectedOptionIndex = optionButtons.length - 1;
+          } else {
+            selectedOptionIndex = (selectedOptionIndex - 1 + optionButtons.length) % optionButtons.length;
+          }
+        }
+
+        highlightOption(selectedOptionIndex);
+        console.log(`Platzi: Navigated to option ${selectedOptionIndex}`);
+      }
+
+      // Enter key to click the highlighted option or the Next button
+      if (event.key === "Enter") {
+        event.preventDefault();
+
+        const optionButtons = document.querySelectorAll(
+          'button[data-testid="QuestionOption-content"]'
+        ) as NodeListOf<HTMLButtonElement>;
+
+        // If an option is highlighted, click it
+        if (selectedOptionIndex >= 0 && selectedOptionIndex < optionButtons.length) {
+          optionButtons[selectedOptionIndex].click();
+          console.log(`Platzi: Clicked option ${selectedOptionIndex}`);
+          // Reset selection after clicking
+          selectedOptionIndex = -1;
+          highlightOption(-1);
+        } else {
+          // If no option is highlighted, click the "Siguiente" (Next) button
+          const nextButton = document.querySelector(
+            'button[testid="ControlBar-button-next"]'
+          ) as HTMLButtonElement;
+
+          if (nextButton) {
+            nextButton.click();
+            console.log("Platzi: Clicked Next button");
+          }
+        }
+      }
+
+      // Keyboard shortcuts: Press 'a', 'b', 'c', or 'd' to select quiz options
+      const key = event.key.toLowerCase();
+      if (["a", "b", "c", "d"].includes(key)) {
+        // Find all quiz option buttons
+        const optionButtons = document.querySelectorAll(
+          'button[data-testid="QuestionOption-content"]'
+        ) as NodeListOf<HTMLButtonElement>;
+
+        if (optionButtons.length === 0) return;
+
+        // Find the button with the matching letter
+        for (const button of optionButtons) {
+          const letterSpan = button.querySelector(
+            ".QuestionOption-letter-span"
+          ) as HTMLElement;
+
+          if (letterSpan && letterSpan.textContent?.toLowerCase() === key) {
+            event.preventDefault();
+            button.click();
+            console.log(`Platzi: Selected option ${key.toUpperCase()}`);
+            // Reset selection after clicking
+            selectedOptionIndex = -1;
+            highlightOption(-1);
+            break;
+          }
         }
       }
     });
