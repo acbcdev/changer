@@ -115,15 +115,26 @@ export default defineContentScript({
 
     // Function to go to inbox
     function goToInbox() {
-      const currentUrl = window.location.href;
+      // Try to find the inbox button in the sidebar (supports English and Spanish)
+      const inboxButton = document.querySelector(
+        '[data-tooltip="Inbox"], [data-tooltip="Recibidos"]'
+      ) as HTMLElement;
 
-      // Extract current account number if exists
+      if (inboxButton) {
+        // Find the link inside the inbox button
+        const inboxLink = inboxButton.querySelector("a") as HTMLElement;
+        if (inboxLink) {
+          inboxLink.click();
+          console.log("Gmail: Clicked inbox button");
+          return;
+        }
+      }
+
+      // Fallback: navigate via URL if button not found
+      const currentUrl = window.location.href;
       const accountMatch = currentUrl.match(/\/mail\/u\/(\d+)\//);
       const currentAccount = accountMatch ? accountMatch[1] : "0";
-
-      // Go to inbox for current account
       const inboxUrl = `https://mail.google.com/mail/u/${currentAccount}/#inbox`;
-
       window.location.href = inboxUrl;
     }
   },
