@@ -1,10 +1,16 @@
 export default defineContentScript({
   matches: ["*://*.notion.so/*"],
   main() {
+    // Helper function to check if any modifier keys are pressed
+    function hasModifierKey(event: KeyboardEvent): boolean {
+      return event.ctrlKey || event.metaKey || event.altKey || event.shiftKey;
+    }
+
     // Keyboard shortcut: Press 'n' to click the add new item button
     document.addEventListener("keydown", (event) => {
-      // Only trigger on 'n' key
+      // Only trigger on 'n' key without modifiers
       if (event.key !== "n" && event.key !== "N") return;
+      if (hasModifierKey(event)) return;
 
       // Check if user is typing in an input field
       const activeElement = document.activeElement;

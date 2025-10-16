@@ -1,6 +1,11 @@
 export default defineContentScript({
   matches: ["*://mail.google.com/*"],
   main() {
+    // Helper function to check if any modifier keys are pressed
+    function hasModifierKey(event: KeyboardEvent): boolean {
+      return event.ctrlKey || event.metaKey || event.altKey || event.shiftKey;
+    }
+
     // Add keyboard shortcuts
     document.addEventListener("keydown", (event) => {
       // Check if user is not typing in an input field
@@ -70,7 +75,7 @@ export default defineContentScript({
       }
 
       // Press 'h' to go to inbox
-      if (event.key === "h" || event.key === "H") {
+      if ((event.key === "h" || event.key === "H") && !hasModifierKey(event)) {
         event.preventDefault();
         goToInbox();
       }

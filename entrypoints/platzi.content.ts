@@ -4,6 +4,11 @@ export default defineContentScript({
     // Track currently selected quiz option index
     let selectedOptionIndex = -1;
 
+    // Helper function to check if any modifier keys are pressed
+    function hasModifierKey(event: KeyboardEvent): boolean {
+      return event.ctrlKey || event.metaKey || event.altKey || event.shiftKey;
+    }
+
     // Helper function to copy and provide visual feedback
     function copyToClipboard(element: HTMLElement) {
       const textToCopy = element.innerText || element.textContent;
@@ -76,7 +81,7 @@ export default defineContentScript({
       if (isTyping) return;
 
       // Keyboard shortcut: Press 'h' to copy the first h1 element
-      if (event.key === "h" || event.key === "H") {
+      if ((event.key === "h" || event.key === "H") && !hasModifierKey(event)) {
         const h1Element = document.querySelector("h1") as HTMLElement;
 
         if (h1Element) {
@@ -86,7 +91,7 @@ export default defineContentScript({
       }
 
       // Keyboard shortcut: Press 'r' to copy the resume content
-      if (event.key === "r" || event.key === "R") {
+      if ((event.key === "r" || event.key === "R") && !hasModifierKey(event)) {
         const contentElement = document.querySelector(
           '[class*="Articlass__content"]'
         ) as HTMLElement;
@@ -157,7 +162,7 @@ export default defineContentScript({
 
       // Keyboard shortcuts: Press 'a', 'b', 'c', or 'd' to select quiz options
       const key = event.key.toLowerCase();
-      if (["a", "b", "c", "d"].includes(key)) {
+      if (["a", "b", "c", "d"].includes(key) && !hasModifierKey(event)) {
         // Find all quiz option buttons
         const optionButtons = document.querySelectorAll(
           'button[data-testid="QuestionOption-content"]'
