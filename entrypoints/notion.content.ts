@@ -1,34 +1,15 @@
+import hotkeys from 'hotkeys-js';
+
 export default defineContentScript({
   matches: ["*://*.notion.so/*"],
   main() {
-    // Helper function to check if any modifier keys are pressed
-    function hasModifierKey(event: KeyboardEvent): boolean {
-      return event.ctrlKey || event.metaKey || event.altKey || event.shiftKey;
-    }
-
-    // Keyboard shortcut: Press 'n' to click the add new item button
-    document.addEventListener("keydown", (event) => {
-      // Only trigger on 'n' key without modifiers
-      if (event.key !== "n" && event.key !== "N") return;
-      if (hasModifierKey(event)) return;
-
-      // Check if user is typing in an input field
-      const activeElement = document.activeElement;
-      const isTyping =
-        activeElement?.tagName === "INPUT" ||
-        activeElement?.tagName === "TEXTAREA" ||
-        activeElement?.getAttribute("contenteditable") === "true";
-
-      // Don't trigger if user is typing
-      if (isTyping) return;
-
-      // Find the add new item button by class name
+    // Press 'n' to click the add new item button
+    hotkeys('n', () => {
       const addButton = document.querySelector(
         ".notion-collection-view-item-add"
       ) as HTMLElement;
 
       if (addButton) {
-        event.preventDefault();
         addButton.click();
         console.log("Notion: Clicked add new item button");
       }

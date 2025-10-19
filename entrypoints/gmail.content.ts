@@ -1,84 +1,48 @@
+import hotkeys from 'hotkeys-js';
+
 export default defineContentScript({
   matches: ["*://mail.google.com/*"],
   main() {
-    // Helper function to check if any modifier keys are pressed
-    function hasModifierKey(event: KeyboardEvent): boolean {
-      return event.ctrlKey || event.metaKey || event.altKey || event.shiftKey;
-    }
-
-    // Add keyboard shortcuts
-    document.addEventListener("keydown", (event) => {
-      // Check if user is not typing in an input field
-      const activeElement = document.activeElement;
-      const isTyping =
-        activeElement?.tagName === "INPUT" ||
-        activeElement?.tagName === "TEXTAREA" ||
-        activeElement?.getAttribute("contenteditable") === "true";
-
-      // Only handle shortcuts when not typing
-      if (isTyping) return;
-
-      // Handle left/right arrow keys for previous/next email
-      if (event.key === "ArrowLeft" || event.key === "<") {
-        event.preventDefault();
-        // Find the "newer" button (supports English and Spanish)
-        const newerButton = document.querySelector(
-          '[aria-label="Newer"], [aria-label="Más reciente"]'
-        ) as HTMLElement;
-        if (
-          newerButton &&
-          newerButton.getAttribute("aria-disabled") !== "true"
-        ) {
-          newerButton.click();
-        }
-      } else if (event.key === "ArrowRight" || event.key === ">") {
-        event.preventDefault();
-        // Find the "older" button (supports English and Spanish)
-        const olderButton = document.querySelector(
-          '[aria-label="Older"], [aria-label="Anterior"]'
-        ) as HTMLElement;
-        if (
-          olderButton &&
-          olderButton.getAttribute("aria-disabled") !== "true"
-        ) {
-          olderButton.click();
-        }
+    // Left arrow or '<' for newer email
+    hotkeys('left, <', () => {
+      const newerButton = document.querySelector(
+        '[aria-label="Newer"], [aria-label="Más reciente"]'
+      ) as HTMLElement;
+      if (newerButton && newerButton.getAttribute("aria-disabled") !== "true") {
+        newerButton.click();
       }
+    });
 
-      // Account switcher:
-      // Mac: Ctrl + Cmd + number (1-9)
-      // Linux/Windows: Ctrl + Alt + number
-      const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
-      const modifierPressed = isMac
-        ? event.metaKey && event.ctrlKey // Ctrl + Cmd on Mac
-        : event.ctrlKey && event.altKey; // Ctrl + Alt on Linux/Windows
-
-      if (modifierPressed && !event.repeat) {
-        const numberPressed = parseInt(event.key);
-        if (numberPressed >= 1 && numberPressed <= 9) {
-          event.preventDefault();
-          switchToAccount(numberPressed - 1); // 0-indexed
-        }
+    // Right arrow or '>' for older email
+    hotkeys('right, >', () => {
+      const olderButton = document.querySelector(
+        '[aria-label="Older"], [aria-label="Anterior"]'
+      ) as HTMLElement;
+      if (olderButton && olderButton.getAttribute("aria-disabled") !== "true") {
+        olderButton.click();
       }
+    });
 
-      // Open account switcher menu:
-      // Mac: Cmd + Shift + A
-      // Linux/Windows: Alt + A or Ctrl + Shift + A
-      const openMenuShortcut = isMac
-        ? event.metaKey && event.shiftKey && event.key.toLowerCase() === "a"
-        : (event.altKey || (event.ctrlKey && event.shiftKey)) &&
-          event.key.toLowerCase() === "a";
+    // Account switching: Ctrl+Cmd+number (Mac) or Ctrl+Alt+number (Windows/Linux)
+    const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
+    const modifier = isMac ? 'ctrl+command' : 'ctrl+alt';
 
-      if (openMenuShortcut) {
-        event.preventDefault();
-        openAccountSwitcher();
+    hotkeys(`${modifier}+1,${modifier}+2,${modifier}+3,${modifier}+4,${modifier}+5,${modifier}+6,${modifier}+7,${modifier}+8,${modifier}+9`, (event) => {
+      const numberPressed = parseInt(event.key);
+      if (numberPressed >= 1 && numberPressed <= 9) {
+        switchToAccount(numberPressed - 1);
       }
+    });
 
-      // Press 'h' to go to inbox
-      if ((event.key === "h" || event.key === "H") && !hasModifierKey(event)) {
-        event.preventDefault();
-        goToInbox();
-      }
+    // Open account switcher menu: Cmd+Shift+A (Mac) or Alt+A/Ctrl+Shift+A (Windows/Linux)
+    const menuShortcut = isMac ? 'command+shift+a' : 'alt+a,ctrl+shift+a';
+    hotkeys(menuShortcut, () => {
+      openAccountSwitcher();
+    });
+
+    // Press 'h' to go to inbox
+    hotkeys('h', () => {
+      goToInbox();
     });
 
     // Function to open the account switcher menu
