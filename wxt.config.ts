@@ -3,12 +3,12 @@ import { defineConfig } from "wxt";
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   modules: ["@wxt-dev/module-react"],
-  outDir: "output",
   manifest: {
     name: "Charger - Productivity Shortcuts",
-    description: "Multi-website browser extension with custom keyboard shortcuts and productivity enhancements for Gmail, Platzi, Notion, and more.",
+    description:
+      "Multi-website browser extension with custom keyboard shortcuts and productivity enhancements for Gmail, Platzi, Notion, and more.",
     version: "1.0.0",
-    author: "acbc",
+    author: { email: "acbc.dev@gmail.com" },
     homepage_url: "https://github.com/acbcdev/changer",
     permissions: ["clipboardWrite"],
     icons: {
